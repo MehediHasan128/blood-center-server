@@ -30,6 +30,7 @@ async function run() {
 
     const dictrictColletion = client.db('bloodCenterDB').collection('districts');
     const upazilaCollection = client.db('bloodCenterDB').collection('upazila');
+    const userCollection = client.db('bloodCenterDB').collection('users');
 
 
 
@@ -50,6 +51,11 @@ async function run() {
 
     // User related api
     
+    app.post('/users', async(req, res) =>{
+      const user = req.body;
+      const result = await userCollection.insertOne(user)
+      res.send(result);
+    })
 
 
 
