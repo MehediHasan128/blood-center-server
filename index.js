@@ -29,7 +29,7 @@ async function run() {
     await client.connect();
 
     const dictrictColletion = client.db('bloodCenterDB').collection('districts');
-
+    const upazilaCollection = client.db('bloodCenterDB').collection('upazila');
 
 
 
@@ -38,6 +38,18 @@ async function run() {
         const result = await dictrictColletion.find().toArray();
         res.send(result);
     })
+
+    app.get('/upazila/:name', async(req, res) =>{
+        const districtName = req.params.name;
+        const query = {district_name: districtName}
+        const result = await upazilaCollection.find(query).toArray();
+        res.send(result);
+    })
+
+
+
+    // User related api
+    
 
 
 
