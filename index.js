@@ -28,7 +28,7 @@ async function run() {
     const dictrictColletion = client.db("bloodCenterDB").collection("districts");
     const upazilaCollection = client.db("bloodCenterDB").collection("upazila");
     const userCollection = client.db("bloodCenterDB").collection("users");
-
+    const donationRequestCollection = client.db("bloodCenterDB").collection("allDonationRequest");
 
     // Custom Middelware
     const verifyToken = (req, res, next) =>{
@@ -71,12 +71,24 @@ async function run() {
     });
 
     // User related api
-
     app.post("/users", async (req, res) => {
       const user = req.body;
       const result = await userCollection.insertOne(user);
       res.send(result);
     });
+
+
+    // Donatin request realted api
+
+    app.get('/donationRequest', async(req, res) =>{
+      
+    })
+
+    app.post('/donationRequest', async(req, res) =>{
+        const request = req.body;
+        const result = await donationRequestCollection.insertOne(request);
+        res.send(result);
+    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
