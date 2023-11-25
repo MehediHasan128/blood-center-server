@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 5000;
+const jwt = require('jasonwebtoken');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
 
@@ -31,6 +32,14 @@ async function run() {
     const dictrictColletion = client.db('bloodCenterDB').collection('districts');
     const upazilaCollection = client.db('bloodCenterDB').collection('upazila');
     const userCollection = client.db('bloodCenterDB').collection('users');
+
+
+    // Json web token relateld api
+    app.post('/jwt', async(req, res) =>{
+      const user = req.body;
+      
+    })
+
 
 
 
