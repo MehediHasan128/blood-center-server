@@ -29,6 +29,7 @@ async function run() {
     const upazilaCollection = client.db("bloodCenterDB").collection("upazila");
     const userCollection = client.db("bloodCenterDB").collection("users");
     const donationRequestCollection = client.db("bloodCenterDB").collection("allDonationRequest");
+    const donerCollection = client.db("bloodCenterDB").collection("doners");
 
     // Custom Middelware
     const verifyToken = (req, res, next) =>{
@@ -70,6 +71,20 @@ async function run() {
       res.send(result);
     });
 
+
+    // Admin related api
+    app.get('/users/admin/:email', async(req, res) =>{
+      const userEmail = req.params.email;
+      const query = {email: userEmail};
+      const user = await userCollection.findOne(query);
+      let admin = false;
+      if(user){
+        admin = user?.role === 'Admin';
+      }
+      res.send({admin})
+    })
+
+
     // User related api
     app.post("/users", async (req, res) => {
       const user = req.body;
@@ -79,7 +94,6 @@ async function run() {
 
 
     // Donatin request realted api
-
     app.get('/allDonationRequest', async(req, res) =>{
       const result = await donationRequestCollection.find().toArray();
       res.send(result)
@@ -108,6 +122,15 @@ async function run() {
         },
       };
       const result = await donationRequestCollection.updateOne(filter, updateDoc);
+      res.send(result)
+    })
+
+
+
+    // Doner Information related api
+    app.post('/doners', async(req, res) =>{
+      const donerInfo = req.body;
+      const result = await donerCollection.insertOne(donerInfo)
       res.send(result)
     })
 
