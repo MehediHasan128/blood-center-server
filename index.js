@@ -98,17 +98,28 @@ async function run() {
 
 
     // User related api
-    app.get('/users', async(req, res) =>{
+    app.get('/users', verifyToken, verifyAdmin, async(req, res) =>{
       const result = await userCollection.find().toArray();
       res.send(result)
     })
+
+    app.get('/users/:email', verifyToken, async(req, res) =>{
+      const userEmail = req.params.email;
+      const query = {email: userEmail}
+      const options = {
+        projection: { status: 1 }
+      };
+      const result = await userCollection.findOne(query, options);
+      res.send(result)
+    })
+
     app.post("/users", async (req, res) => {
       const user = req.body;
       const result = await userCollection.insertOne(user);
       res.send(result);
     });
 
-    app.patch('/users/:id', async(req, res) =>{
+    app.patch('/users/:id', verifyToken, verifyAdmin, async(req, res) =>{
       const id = req.params.id;
       const query = {_id: new ObjectId(id)}
       const action = req.body;
@@ -128,20 +139,20 @@ async function run() {
       res.send(result)
     })
 
-    app.get('/donationRequest', async(req, res) =>{
+    app.get('/donationRequest', verifyToken, async(req, res) =>{
       const email = req.query.email;
       const query = { requesterEmail: email };
       const result = await donationRequestCollection.find(query).toArray();
       res.send(result);
     })
 
-    app.post('/donationRequest', async(req, res) =>{
+    app.post('/donationRequest', verifyToken, async(req, res) =>{
         const request = req.body;
         const result = await donationRequestCollection.insertOne(request);
         res.send(result);
     })
 
-    app.patch('/donationRequest/:id', async(req, res) =>{
+    app.patch('/donationRequest/:id', verifyToken, async(req, res) =>{
       const id = req.params.id;
       const filter = {_id: new ObjectId(id)}
       const action = req.body;
