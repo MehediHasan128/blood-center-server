@@ -106,10 +106,7 @@ async function run() {
     app.get('/users/:email', verifyToken, async(req, res) =>{
       const userEmail = req.params.email;
       const query = {email: userEmail}
-      const options = {
-        projection: { status: 1 }
-      };
-      const result = await userCollection.findOne(query, options);
+      const result = await userCollection.findOne(query);
       res.send(result)
     })
 
@@ -163,6 +160,14 @@ async function run() {
       };
       const result = await donationRequestCollection.updateOne(filter, updateDoc);
       res.send(result)
+    })
+
+
+    app.delete('/donationRequest/:id', verifyToken, async(req, res) =>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await donationRequestCollection.deleteOne(query)
+      res.send(result);
     })
 
 
