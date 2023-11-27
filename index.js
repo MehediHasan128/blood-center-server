@@ -116,6 +116,24 @@ async function run() {
       res.send(result);
     });
 
+    app.put('/users/:id', async(req, res) =>{
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)};
+      const option = { upsert: true };
+      const updatedInformation = req.body;
+      const information = {
+        $set: {
+          name: updatedInformation.updateName,      
+          blodGroup: updatedInformation.updatedBloodGrp,
+          district: updatedInformation.updatedDistrict,
+          upazila: updatedInformation.updatedUpazila,
+          image: updatedInformation.profilePicture
+        }
+      };
+      const result = await userCollection.updateOne(filter, information, option);
+      res.send(result);
+    })
+
     app.patch('/users/:id', verifyToken, verifyAdmin, async(req, res) =>{
       const id = req.params.id;
       const query = {_id: new ObjectId(id)}
