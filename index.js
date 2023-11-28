@@ -8,9 +8,11 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 app.use(cors(({
   origin: [
+    'http://localhost:5173',
     'https://blood-center-d8665.web.app',
     'https://blood-center-d8665.firebaseapp.com'
-  ]
+  ],
+  credentials: true
 })));
 app.use(express.json());
 
@@ -37,20 +39,20 @@ async function run() {
     const donerCollection = client.db("bloodCenterDB").collection("doners");
 
     // Custom Middelware
-    const verifyToken = (req, res, next) =>{
-      if(!req.headers.authorization){
-        return res.status(401).send({message: 'unauthorized access'})
-      }
+    // const verifyToken = (req, res, next) =>{
+    //   if(!req.headers.authorization){
+    //     return res.status(401).send({message: 'unauthorized access'})
+    //   }
 
-      const token = req.headers.authorization.split(' ')[1]
-      jwt.verify(token, process.env.SECREAT_TOKEN, (err, decoded) =>{
-        if(err){
-          return res.status(401).send({message: 'unauthorized access'})
-        }
-        req.decoded = decoded;
-        next();
-      })
-    }
+    //   const token = req.headers.authorization.split(' ')[1]
+    //   jwt.verify(token, process.env.SECREAT_TOKEN, (err, decoded) =>{
+    //     if(err){
+    //       return res.status(401).send({message: 'unauthorized access'})
+    //     }
+    //     req.decoded = decoded;
+    //     next();
+    //   })
+    // }
 
 
     const verifyAdmin = async(req, res, next) =>{
@@ -67,14 +69,14 @@ async function run() {
 
 
     // Json web token relateld api
-    app.post("/jwt", async (req, res) => {
-      const user = req.body;
-      console.log(user);
-      const token = jwt.sign(user, process.env.SECREAT_TOKEN, {
-        expiresIn: "1h",
-      });
-      res.send({ token });
-    });
+    // app.post("/jwt", async (req, res) => {
+    //   const user = req.body;
+    //   console.log(user);
+    //   const token = jwt.sign(user, process.env.SECREAT_TOKEN, {
+    //     expiresIn: "1h",
+    //   });
+    //   res.send({ token });
+    // });
 
     // District related api
     app.get("/districts", async (req, res) => {
@@ -90,8 +92,22 @@ async function run() {
     });
 
 
+    // Admin State 
+    app.get('/admin-state', async(req, res) =>{
+      const users = await userCollection.estimatedDocumentCount();
+      const totalReq = await donationRequestCollection.estimatedDocumentCount();
+      const totalDonars = await donerCollection.estimatedDocumentCount();
+
+      res.send({
+        users,
+        totalReq,
+        totalDonars
+      })
+    })
+
+
     // Admin related api
-    app.get('/users/admin/:email', verifyToken, async(req, res) =>{
+    app.get('/users/admin/:email', async(req, res) =>{
       const userEmail = req.params.email;
       const query = {email: userEmail};
       const user = await userCollection.findOne(query);
@@ -104,7 +120,7 @@ async function run() {
 
 
     // User related api
-    app.get('/users', verifyToken, verifyAdmin, async(req, res) =>{
+    app.get('/users', async(req, res) =>{
       const result = await userCollection.find().toArray();
       res.send(result)
     })
@@ -122,7 +138,7 @@ async function run() {
       res.send(result);
     });
 
-    app.put('/users/:id', verifyToken, async(req, res) =>{
+    app.put('/users/:id', async(req, res) =>{
       const id = req.params.id;
       const filter = {_id: new ObjectId(id)};
       const option = { upsert: true };
@@ -140,7 +156,7 @@ async function run() {
       res.send(result);
     })
 
-    app.patch('/users/:id', verifyToken, verifyAdmin, async(req, res) =>{
+    app.patch('/users/:id', async(req, res) =>{
       const id = req.params.id;
       const query = {_id: new ObjectId(id)}
       const action = req.body;
@@ -156,18 +172,47 @@ async function run() {
 
     // Donatin request realted api
     app.get('/allDonationRequest', async(req, res) =>{
-      const result = await donationRequestCollection.find().sort({ donationRequestTime: 1 }).toArray();
+      const result = await donationRequestCollection.find().sort({ donationRequestTime: -1 }).toArray();
       res.send(result)
     })
 
-    app.get('/donationRequest', verifyToken, async(req, res) =>{
+    app.get('/donationRequest', async(req, res) =>{
       const email = req.query.email;
       const query = { requesterEmail: email };
       const result = await donationRequestCollection.find(query).toArray();
       res.send(result);
     })
 
-    app.post('/donationRequest', verifyToken, async(req, res) =>{
+    app.get('/updateDonation/:id', async(req, res) =>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await donationRequestCollection.findOne(query);
+      res.send(result);
+    })
+
+    app.put('/updatedDonation/:id', async(req, res) =>{
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)};
+      const options = {upsert: true};
+      const updatedInformation = req.body;
+      const updatedDonation = {
+        $set: {
+          recipientName: updatedInformation.updatedRecipientName,
+          recipientBloodGroup: updatedInformation.updatedRecipientBloodGroup,
+          recipientDistrict: updatedInformation.updatedRecipientDistrict,
+          recipientUpazila: updatedInformation.updatedRecipientUpazila,
+          hospitalName: updatedInformation.updatedHospitalName,
+          fullAddress: updatedInformation.updatedFullAddress,
+          reciptionDate: updatedInformation.updatedReciptionDate,
+          reciptionTime: updatedInformation.updatedReciptionTime
+        }
+      }
+      console.log(updatedDonation);
+      const result = await donationRequestCollection.updateOne(filter, updatedDonation, options);
+      res.send(result);
+    })
+
+    app.post('/donationRequest', async(req, res) =>{
         const request = req.body;
         const result = await donationRequestCollection.insertOne(request);
         res.send(result);
@@ -187,7 +232,7 @@ async function run() {
     })
 
 
-    app.delete('/donationRequest/:id', verifyToken, async(req, res) =>{
+    app.delete('/donationRequest/:id', async(req, res) =>{
       const id = req.params.id;
       const query = {_id: new ObjectId(id)}
       const result = await donationRequestCollection.deleteOne(query)
@@ -221,4 +266,4 @@ app.get("/", (req, res) => {
 
 app.listen(port, () => {
   console.log(`This ser is running on port ${port}`);
-});
+}); 
