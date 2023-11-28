@@ -6,7 +6,12 @@ const port = process.env.PORT || 5000;
 const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
-app.use(cors());
+app.use(cors(({
+  origin: [
+    'https://blood-center-d8665.web.app',
+    'https://blood-center-d8665.firebaseapp.com'
+  ]
+})));
 app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.jmtxbp5.mongodb.net/?retryWrites=true&w=majority`;
@@ -64,6 +69,7 @@ async function run() {
     // Json web token relateld api
     app.post("/jwt", async (req, res) => {
       const user = req.body;
+      console.log(user);
       const token = jwt.sign(user, process.env.SECREAT_TOKEN, {
         expiresIn: "1h",
       });
@@ -85,7 +91,7 @@ async function run() {
 
 
     // Admin related api
-    app.get('/users/admin/:email', async(req, res) =>{
+    app.get('/users/admin/:email', verifyToken, async(req, res) =>{
       const userEmail = req.params.email;
       const query = {email: userEmail};
       const user = await userCollection.findOne(query);
@@ -103,7 +109,7 @@ async function run() {
       res.send(result)
     })
 
-    app.get('/users/:email', verifyToken, async(req, res) =>{
+    app.get('/users/:email', async(req, res) =>{
       const userEmail = req.params.email;
       const query = {email: userEmail}
       const result = await userCollection.findOne(query);
@@ -116,7 +122,7 @@ async function run() {
       res.send(result);
     });
 
-    app.put('/users/:id', async(req, res) =>{
+    app.put('/users/:id', verifyToken, async(req, res) =>{
       const id = req.params.id;
       const filter = {_id: new ObjectId(id)};
       const option = { upsert: true };
@@ -150,7 +156,7 @@ async function run() {
 
     // Donatin request realted api
     app.get('/allDonationRequest', async(req, res) =>{
-      const result = await donationRequestCollection.find().toArray();
+      const result = await donationRequestCollection.find().sort({ donationRequestTime: 1 }).toArray();
       res.send(result)
     })
 
@@ -167,7 +173,7 @@ async function run() {
         res.send(result);
     })
 
-    app.patch('/donationRequest/:id', verifyToken, async(req, res) =>{
+    app.patch('/donationRequest/:id', async(req, res) =>{
       const id = req.params.id;
       const filter = {_id: new ObjectId(id)}
       const action = req.body;
