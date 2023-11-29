@@ -183,6 +183,13 @@ async function run() {
       res.send(result);
     })
 
+    app.get('/filterUsers/:filter', async(req, res) =>{
+      const filterValue = req.params.filter;
+      const query = {status: filterValue};
+      const result = await userCollection.find(query).toArray();
+      res.send(result)
+    })
+
     app.get('/updateDonation/:id', async(req, res) =>{
       const id = req.params.id;
       const query = {_id: new ObjectId(id)}
