@@ -172,14 +172,14 @@ async function run() {
 
     // Donatin request realted api
     app.get('/allDonationRequest', async(req, res) =>{
-      const result = await donationRequestCollection.find().sort({ donationRequestTime: -1 }).toArray();
+      const result = await donationRequestCollection.find().toArray();
       res.send(result)
     })
 
     app.get('/donationRequest', async(req, res) =>{
       const email = req.query.email;
       const query = { requesterEmail: email };
-      const result = await donationRequestCollection.find(query).toArray();
+      const result = await donationRequestCollection.find(query).sort({donationRequestTime: -1}).toArray();
       res.send(result);
     })
 
