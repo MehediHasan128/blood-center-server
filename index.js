@@ -169,6 +169,19 @@ async function run() {
       res.send(result)
     })
 
+    app.patch('/usersRole/:id', async(req, res) =>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const action = req.body;
+      const updateDoc = {
+        $set: {
+          role: action.userRole
+        }
+      };
+      const result = await userCollection.updateOne(query, updateDoc);
+      res.send(result)
+    })
+
 
     // Donatin request realted api
     app.get('/allDonationRequest', async(req, res) =>{
